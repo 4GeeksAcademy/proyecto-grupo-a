@@ -1,5 +1,4 @@
 import React, { useEffect } from "react"
-import rigoImageUrl from "../assets/img/rigo-baby.jpg";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 
 export const Home = () => {
@@ -33,7 +32,7 @@ export const Home = () => {
 	}, [])
 
 	return (
-		<div className="min-h-screen  flex items-center justify-center">
+		<div className="min-h-screen flex items-center justify-center">
 
 		</div>
 	);
