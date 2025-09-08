@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-
 .calendar {
   min-width: 570px;
 }
@@ -225,4 +224,26 @@
   font-weight: 600;
   font-size: 18px;
   color: #333;
+}
+
+
+
+/*  */
+/* Líneas de los días en vista mensual */
+.fc-daygrid-day-frame {
+  border: 0.1px solid rgba(0, 0, 0, 0.01); /* muy finas y apenas visibles */
+}
+
+/* Separación entre cabecera y días */
+.fc-col-header-cell {
+  border-bottom: 0.5px solid rgb(255, 0, 0);
+}
+
+.fc {
+  border-radius: 12px;
+  overflow: hidden; /* evita que algo sobresalga */
+}
+
+.fc-event-title {
+ 
 }

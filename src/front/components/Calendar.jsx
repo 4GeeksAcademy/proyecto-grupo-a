@@ -63,23 +63,26 @@ const Calendar = () => {
           <select onChange={handleViewChange} className="view-select">
             <option value="dayGridMonth">Mes</option>
             <option value="timeGridWeek">Semana</option>
-            <option value="timeGridDay">Día</option>
           </select>
         </div>
       </div>
 
-      <FullCalendar
-        ref={calendarRef}
-        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-        initialView="dayGridMonth"
-        locale={esLocale}
-        headerToolbar={false}
-        events={events}
-        dateClick={handleDateClick}
-        editable={true}
-        selectable={true}
-        datesSet={updateTitle} 
-      />
+     <FullCalendar
+    ref={calendarRef}
+    contentHeight="auto"
+    plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+    initialView="dayGridMonth"
+    locale={esLocale}
+    headerToolbar={false}
+    events={events}
+    dateClick={handleDateClick}
+    editable={true}
+    selectable={true}
+    datesSet={updateTitle}
+    height="auto"       // importante
+    expandRows={true}   // importante para que las filas se expandan
+    nowIndicator="true"
+  />
     </div>
   );
 };
