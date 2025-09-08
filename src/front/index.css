@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+
 .calendar {
   min-width: 570px;
 }
@@ -147,4 +148,81 @@
 
 .tab--3:checked ~ .indicator {
   left: calc(130px * 2 + 2px);
+}
+
+
+/* FULL CALENDAR */
+/* Hacer los bordes de los días más transparentes */
+/* CalendarMinimal.css */
+
+/* Hacer los bordes de los días más transparentes */
+.fc .fc-daygrid-day, 
+.fc .fc-timegrid-slot {
+  border: 1px solid rgba(0, 0, 0, 0.1); /* borde muy transparente */
+}
+
+/* Bordes de los eventos más suaves */
+.fc .fc-event {
+  border: 1px solid rgba(0, 0, 0, 0.2); /* borde suave */
+  border-radius: 5px;
+}
+
+/* Botones sin fondo ni borde */
+.fc .fc-button {
+  background: none !important;
+  border: none !important;
+  color: #333;
+  padding: 5px 10px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+/* Hover de los botones: solo cambia el color */
+.fc .fc-button:hover {
+  color: #007bff;
+  background: none !important;
+  border: none !important;
+}
+
+/* Título del calendario */
+.fc .fc-toolbar-title {
+  color: #333;
+  font-weight: 600;
+}
+
+/*  */
+.custom-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.left-controls button {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #333;
+  margin-right: 5px;
+}
+
+.left-controls button:hover {
+  color: #000000;
+}
+
+.right-controls .view-select {
+  background: none;
+  border: none;
+  padding: 5px 10px;
+  font-size: 16px;
+  cursor: pointer;
+  color: #333;
+}
+
+.center-title {
+  font-weight: 600;
+  font-size: 18px;
+  color: #333;
 }

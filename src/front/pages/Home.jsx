@@ -3,6 +3,7 @@
 
 import React, { useEffect } from "react"
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
+import Inicio from "./Inicio.jsx";
 
 export const Home = () => {
 
@@ -35,8 +36,8 @@ export const Home = () => {
   }, [])
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-
-    </div>
+    <>
+      <Inicio></Inicio>
+    </>
   );
 }; 

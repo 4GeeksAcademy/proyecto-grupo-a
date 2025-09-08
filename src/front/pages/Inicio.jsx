@@ -1,14 +1,16 @@
-export default Inicio =()=>{
+import Calendar from "../components/Calendar"
+export const Inicio = () => {
     return (
-        <div>
+        <div className="row">
             {/* primera mitad */}
-            <div className=""> 
-
+            <div className="col">
+                <Calendar></Calendar>
             </div>
             {/* segunda mitad */}
-            <div className="">
+            <div className="col">
 
             </div>
         </div>
     )
 }
+export default Inicio;
