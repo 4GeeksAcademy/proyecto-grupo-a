@@ -4,18 +4,18 @@ export const Inicio = () => {
         <div className="row h-100 ">
             <div className="col"></div>
             {/* primera mitad */}
-            <div className="col-7 p-3 rounded card div4">
+            <div className="col-7 p-3 rounded card ">
                 <Calendar />
             </div>
             {/* segunda mitad */}
-            <div className="col-3 text-center">
-                    <section>hoy</section>
+            <div className="col-3 p-3 text-center card-1">
+                    <section>HOY</section>
                 <div className="card align-between p-3">
                     </div>
-                    <section>esta semana</section>
+                    <section>ESTA SEMANA</section>
                 <div className="card align-between p-3">
                     </div>
-                    <section>sin fecha</section>
+                    <section>SIN FECHA</section>
                 <div className="card align-between p-3">
                     </div>
 

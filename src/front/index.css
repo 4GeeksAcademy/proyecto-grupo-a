@@ -15,6 +15,14 @@
   box-shadow: 5px 5px 15px rgba(128, 128, 128, 0.356);
   border: none;
   margin: 2rem;
+  min-height: 10vh;
+}
+.card-1 {
+  background-color: white;
+  border-radius: 20px;
+  box-shadow: 5px 5px 15px rgba(128, 128, 128, 0);
+  border: none;
+  margin: 2rem;
 }
 .btn-add {
   background-color: rgb(255, 255, 255);
@@ -237,13 +245,4 @@
 /* Separación entre cabecera y días */
 .fc-col-header-cell {
   border-bottom: 0.5px solid rgb(255, 0, 0);
-}
-
-.fc {
-  border-radius: 12px;
-  overflow: hidden; /* evita que algo sobresalga */
-}
-
-.fc-event-title {
- 
 }
