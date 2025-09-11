@@ -1,42 +1,195 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import TasksSection from './TasksSection';
 import TaskItem from './TaskItem';
 
-{/*Arrays de ejemplo*/ }
-const tasks = {
-    atrasado: [
-        { id: 1, text: "Estudiar", color: "text-purple-600" },
-        { id: 2, text: "Limpiar", color: "text-yellow-600" },
-        { id: 3, text: "Hacer los deberes", color: "text-green-600" },
-    ],
-    conFecha: {
-        "Lunes, 25 de agosto": [{ id: 4, text: "Hacer la cama", color: "text-green-600", repeat: true }],
-        "Jueves, 12 de septiembre": [{ id: 8, text: "Viajar a Madrid", color: "text-pink-600", repeat: false }],
-    },
-    sinFecha: [
-        { id: 5, text: "Leer un libro", color: "text-blue-600" },
-        { id: 6, text: "Organizar escritorio", color: "text-red-600" },
-        { id: 7, text: "Llamar al dentista", color: "text-indigo-600" },
-    ],
-};
 
 export default function Tasks() {
-    {/*Variable de estado que controla si es visible o no*/ }
+     // Estado para las tareas obtenidas de la API
+    const [tasks, setTasks] = useState({
+        atrasado: [],
+        conFecha: {},
+        sinFecha: [],
+    });
+
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    
+    // ID del usuario 
+    const userId = 1; // Cambiar por ID real del usuario
+
+    // Variable de estado que controla si es visible o no*/ 
     const [showFilterPopup, setShowFilterPopup] = useState(false);
-    {/*Variable de estaddo que controla si estan marcados los checkbox*/ }
+    // Variable de estaddo que controla si estan marcados los checkbox
     const [activeFilters, setActiveFilters] = useState({
         atrasado: true,
         conFecha: true,
         sinFecha: true
     });
-    {/*Alterna un filtro específico (activado/desactivado)*/ }
+
+    // Función para obtener tareas de la API
+    const fetchTasks = async () => {
+        try {
+            setLoading(true);
+            const response = await fetch(`/api/users/${userId}/tasks`);
+            
+            if (!response.ok) {
+                throw new Error(`Error: ${response.status}`);
+            }
+            
+            const apiTasks = await response.json();
+            
+            // Procesar y categorizar las tareas
+            const processedTasks = processTasks(apiTasks);
+            setTasks(processedTasks);
+            
+        } catch (err) {
+            console.error('Error al obtener tareas:', err);
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Función para procesar y categorizar las tareas
+    const processTasks = (apiTasks) => {
+        const now = new Date();
+        const categorizedTasks = {
+            atrasado: [],
+            conFecha: {},
+            sinFecha: [],
+        };
+
+        apiTasks.forEach(task => {
+            // Mapear los campos de la API a la estructura del componente
+            const processedTask = {
+                id: task.id,
+                text: task.title,
+                color: task.color || "text-gray-600",
+                repeat: task.recurrencia !== null,
+                status: task.status,
+                date: task.date
+            };
+
+            if (task.date) {
+                const taskDate = new Date(task.date);
+                
+                // Si la tarea tiene fecha y está vencida
+                if (taskDate < now && task.status === 'pending') {
+                    categorizedTasks.atrasado.push(processedTask);
+                } else {
+                    // Formatear la fecha para mostrar
+                    const formattedDate = formatDate(taskDate);
+                    
+                    if (!categorizedTasks.conFecha[formattedDate]) {
+                        categorizedTasks.conFecha[formattedDate] = [];
+                    }
+                    categorizedTasks.conFecha[formattedDate].push(processedTask);
+                }
+            } else {
+                // Tareas sin fecha
+                categorizedTasks.sinFecha.push(processedTask);
+            }
+        });
+
+        return categorizedTasks;
+    };
+
+    // Función para formatear fecha
+    const formatDate = (date) => {
+        const dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+        const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 
+                       'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+        
+        const dia = dias[date.getDay()];
+        const numeroDate = date.getDate();
+        const mes = meses[date.getMonth()];
+        
+        return `${dia}, ${numeroDate} de ${mes}`;
+    };
+
+     // Función para crear una nueva tarea
+    const createTask = async (taskData) => {
+        try {
+            const response = await fetch(`/api/users/${userId}/tasks`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(taskData),
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error: ${response.status}`);
+            }
+
+            // Recargar las tareas después de crear una nueva
+            await fetchTasks();
+            
+        } catch (err) {
+            console.error('Error al crear tarea:', err);
+            setError(err.message);
+        }
+    };
+
+     // Función para eliminar una tarea
+    const deleteTask = async (taskId) => {
+        try {
+            const response = await fetch(`/api/users/${userId}/tasks/${taskId}`, {
+                method: 'DELETE',
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error: ${response.status}`);
+            }
+
+            // Recargar las tareas después de eliminar
+            await fetchTasks();
+            
+        } catch (err) {
+            console.error('Error al eliminar tarea:', err);
+            setError(err.message);
+        }
+    };
+
+     // Función para actualizar una tarea
+    const updateTask = async (taskId, updateData) => {
+        try {
+            const response = await fetch(`/api/users/${userId}/tasks/${taskId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(updateData),
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error: ${response.status}`);
+            }
+
+            // Recargar las tareas después de actualizar
+            await fetchTasks();
+            
+        } catch (err) {
+            console.error('Error al actualizar tarea:', err);
+            setError(err.message);
+        }
+    };
+
+    // Cargar tareas al montar el componente
+    useEffect(() => {
+        fetchTasks();
+    }, []);
+
+
+
+    // Alterna un filtro específico (activado/desactivado)
     const toggleFilter = (filterType) => {
         setActiveFilters(prev => ({
             ...prev,
             [filterType]: !prev[filterType]
         }));
     };
-    {/*Pone los checkbox desactivados (Limpia)*/ }
+    // Pone los checkbox desactivados (Limpia)
     const clearAllFilters = () => {
         setActiveFilters({
             atrasado: false,
@@ -53,6 +206,36 @@ export default function Tasks() {
         });
     };
 
+     // Si está cargando
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Cargando tareas...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Si hay error
+    if (error) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-center">
+                    <p className="text-red-600 mb-4">Error al cargar tareas: {error}</p>
+                    <button 
+                        onClick={fetchTasks}
+                        className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors"
+                    >
+                        Reintentar
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col items-center p-4 border-gray-400">
 

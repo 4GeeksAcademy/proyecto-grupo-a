@@ -5,8 +5,10 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User, Personaje, Planeta, Favorito, Task
+from models import db, User, Event, Task, Group
 
+
+app = Flask(__name__)
 
 # Handle/serialize errors like a JSON object
 
@@ -26,12 +28,6 @@ def sitemap():
 # AQUI EMPIEZAN MIS RUTAS! --->
 
 # Endpoints
-
-@app.route("/api/users/<int:user_id>/tasks", methods=["GET"])
-def get_user_tasks(user_id):
-    tasks = Task.query.filter_by(user_id=user_id).all()
-    return jsonify([task.serialize() for task in tasks]), 200
-
 
 #  Obtener todas las tareas de un usuario
 
