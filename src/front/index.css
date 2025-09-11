@@ -246,3 +246,62 @@
 .fc-col-header-cell {
   border-bottom: 0.5px solid rgb(255, 0, 0);
 }
+/* Cambiar el fondo del día actual */
+.fc .fc-daygrid-day.fc-day-today {
+  background-color: #ffffff; /* fondo */
+}
+
+/* Si usas la vista timeGrid */
+.fc .fc-timegrid-col.fc-day-today {
+  background-color: #00000007;
+}
+
+
+.fc .fc-daygrid-day.fc-day-today a.fc-daygrid-day-number {
+  background-color: red;     /* círculo rojo */
+  color: white !important;   /* número en blanco */
+  border-radius: 50%;        /* forma redonda */
+  padding: 0.5px 4px;          /* espacio interno */
+  display: inline-block;     /* para que se aplique bien */
+}
+
+.fc {
+  overflow:visible;
+}
+.calendar-container {
+  overflow: visible;
+  position: relative; /* necesario para los popovers absolutos */
+}
+.my-popover {
+  z-index: 2000; /* por si otros elementos tienen z-index alto */
+}
+
+
+
+
+/* --------------------------------------- */
+/* FORMULARIO */
+/* --------------------------------------- */
+/* tab activo */
+.nav-pills .nav-link.active, .nav-pills .show>.nav-link {
+    color: #ffffff;
+    background-color: #000000;
+}
+/* tab inactivo */
+.nav-link {
+    color: #333;
+    transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out;
+}
+/* Color del toggle al activarlo */
+.form-check-input:checked {
+  background-color: #32c53f; /* rojo */
+  border-color: #32c53f;
+}
+.guardar{
+background-color: #599463;
+border: #599463;
+}
+.guardar:hover{
+background-color: #789c7e;
+border: #789c7e;
+}

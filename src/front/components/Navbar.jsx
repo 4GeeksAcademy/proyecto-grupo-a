@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Lateral from "./Lateral";
-
+import { Link } from "react-router-dom";
 
 export const Navbar = () => {
 	const [openLateral, setOpenLateral] = useState(false);
@@ -44,18 +44,18 @@ export const Navbar = () => {
 
 				{/* Navigation Links */}
 				<div className="col-span-2 flex justify-center gap-4">
-					<a
-						href="/"
+					<Link
+						to="/"
 						className="px-4 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-avocado-600 hover:bg-stone-100 transition-colors"
 					>
 						Inicio
-					</a>
-					<a
-						href="/eventos"
+					</Link>
+					<Link
+						to="/eventos-tareas"
 						className="px-4 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-slate-600 hover:bg-stone-100 transition-colors"
 					>
 						Eventos y tareas
-					</a>
+					</Link>
 				</div>
 
 				{/* Profile */}

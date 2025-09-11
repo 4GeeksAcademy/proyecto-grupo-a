@@ -9,7 +9,6 @@ from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 from functools import wraps
 from datetime import datetime   # ⬅️ agregado para last_session
 
-
 api = Blueprint('api', __name__)
 
 # ------------------- Helpers -------------------
