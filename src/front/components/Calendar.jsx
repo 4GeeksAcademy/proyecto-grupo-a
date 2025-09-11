@@ -9,6 +9,7 @@ import CreateEvent from './CreateEvent';
 const Calendar = () => {
   const calendarRef = useRef(null);
   const [popover, setPopover] = useState(null);
+  const [title, setTitle] = useState('');
 
   // Colores base
   const baseCalendars = {
@@ -68,7 +69,6 @@ const Calendar = () => {
     },
   ]);
 
-  const [title, setTitle] = useState('');
 
   // Crear o editar item
   const handleAddItem = (item) => {
@@ -170,7 +170,10 @@ const Calendar = () => {
       return (
         <div className="flex items-center gap-2" style={{ padding: '4px 6px' }}>
           <div
-            onClick={() => toggleTaskDone(id)}
+           onClick={(e) => {
+    e.stopPropagation(); 
+    toggleTaskDone(id);
+  }}
             style={{
               width: '1em',
               height: '1em',

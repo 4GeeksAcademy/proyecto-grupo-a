@@ -123,7 +123,7 @@ const CreateEvent = ({ selectedDate, onAddItem, calendarColors, taskGroups, item
               ))}
             </select>
             <div
-              className="w-6 h-6 rounded-full border"
+              className="w-6 h-6 rounded-circle border"
               style={{
                 backgroundColor: calendarColors[eventCalendar]?.background || '#ccc',
                 borderColor: calendarColors[eventCalendar]?.border || '#888',
@@ -236,7 +236,7 @@ const CreateEvent = ({ selectedDate, onAddItem, calendarColors, taskGroups, item
                 <option key={key} value={key}>{key}</option>
               ))}
             </select>
-            <div className={`w-6 h-6 rounded-full ${groupColors[taskGroup]}`}></div>
+            <div className={`w-6 h-6 rounded-circle ${groupColors[taskGroup]}`}></div>
           </div>
  <div className="flex mb-2 items-center gap-2">
       <label className="w-24">Fecha</label>
