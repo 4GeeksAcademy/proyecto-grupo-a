@@ -11,6 +11,7 @@ import { Single } from "./pages/Single";
 import { Demo } from "./pages/Demo";
 import { Login } from "./pages/Login";
 import { Signup } from "./pages/Signup";
+import Calendario from "./pages/Calendario";
 
 export const router = createBrowserRouter(
   createRoutesFromElements(
@@ -22,6 +23,9 @@ export const router = createBrowserRouter(
       <Route path="/demo" element={<Demo />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/signup" element={<Signup />} />
+      <Route path="/calendario" element={<Calendario />} />
+
     </Route>
   )
 );
