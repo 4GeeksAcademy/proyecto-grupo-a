@@ -182,7 +182,7 @@ export default function Tasks() {
 
 
 
-    // Alterna un filtro específico (activado/desactivado)
+    // (activado/desactivado)
     const toggleFilter = (filterType) => {
         setActiveFilters(prev => ({
             ...prev,
@@ -197,7 +197,7 @@ export default function Tasks() {
             sinFecha: false
         });
     };
-    {/*Pone los checkbox activados*/ }
+    // Pone los checkbox activados
     const selectAllFilters = () => {
         setActiveFilters({
             atrasado: true,
@@ -206,7 +206,7 @@ export default function Tasks() {
         });
     };
 
-     // Si está cargando
+    // Si está cargando
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
