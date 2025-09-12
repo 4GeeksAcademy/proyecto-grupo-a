@@ -52,7 +52,7 @@ export const ForgotPassword = () => {
 
       if (data?.reset_token_dev_only) {
         await sendResetEmail({ toEmail: email, resetToken: data.reset_token_dev_only });
-        setDevToken(data.reset_token_dev_only);
+        setDevToken(data.reset_token_dev_only)
       }
 
       setStatus({
