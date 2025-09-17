@@ -84,8 +84,8 @@ class Event(db.Model):
     title: Mapped[str] = mapped_column(String(200), nullable=False)
     start_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     end_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    description: Mapped[str] = mapped_column(Text)
-    color: Mapped[str] = mapped_column(String(50))
+    description: Mapped[str] = mapped_column(Text, nullable=True)
+    color: Mapped[str] = mapped_column(String(50), nullable=True)
     
     google_event_id: Mapped[str] = mapped_column(String(255), nullable=True)
     status: Mapped[str] = mapped_column(String(50), default="confirmed")

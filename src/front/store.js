@@ -1,16 +1,34 @@
+// src/front/store.js
+
 export const initialStore = () => {
   return {
-    calendar: [], // Lista de calendarios
-    taskGroup: [], // Lista de grupos de tareas
-    events: [], // Eventos individuales asignados a calendarios
-    tasks: [], // Tareas individuales asignadas a grupos
-    completedRecurrentTasks: [], // Instancias completadas de tareas recurrentes
+    calendar: [],   // Lista de calendarios
+    taskGroup: [],  // Lista de grupos de tareas
+    events: [],     // Eventos individuales asignados a calendarios
+    tasks: [],      // Tareas individuales asignadas a grupos
   };
 };
 
 export default function storeReducer(store, action = {}) {
   switch (action.type) {
-    // CALENDAR
+    /* =========
+     * HYDRATE (desde API)
+     * ========= */
+    case "SET_CALENDARS":
+      return { ...store, calendar: action.payload || [] };
+
+    case "SET_TASKGROUPS":
+      return { ...store, taskGroup: action.payload || [] };
+
+    case "SET_EVENTS":
+      return { ...store, events: action.payload || [] };
+
+    case "SET_TASKS":
+      return { ...store, tasks: action.payload || [] };
+
+    /* =========
+     * CALENDAR
+     * ========= */
     case "ADD_CALENDAR":
       return { ...store, calendar: [...store.calendar, action.payload] };
 
@@ -26,12 +44,12 @@ export default function storeReducer(store, action = {}) {
       return {
         ...store,
         calendar: store.calendar.filter((cal) => cal.id !== action.payload.id),
-        events: store.events.filter(
-          (ev) => ev.calendarId !== action.payload.id
-        ), // elimina eventos asociados
+        events: store.events.filter((ev) => ev.calendarId !== action.payload.id), // elimina eventos asociados
       };
 
-    // TASKGROUPS
+    /* =========
+     * TASKGROUPS
+     * ========= */
     case "ADD_TASKGROUP":
       return { ...store, taskGroup: [...store.taskGroup, action.payload] };
 
@@ -52,7 +70,9 @@ export default function storeReducer(store, action = {}) {
         tasks: store.tasks.filter((t) => t.groupId !== action.payload.id), // elimina tareas asociadas
       };
 
-    // EVENTOS
+    /* =========
+     * EVENTS
+     * ========= */
     case "ADD_EVENT":
       return { ...store, events: [...store.events, action.payload] };
 
@@ -72,7 +92,9 @@ export default function storeReducer(store, action = {}) {
         events: store.events.filter((ev) => ev.id !== action.payload),
       };
 
-    // TAREAS
+    /* =========
+     * TASKS
+     * ========= */
     case "ADD_TASK":
       return { ...store, tasks: [...store.tasks, action.payload] };
 
@@ -90,7 +112,6 @@ export default function storeReducer(store, action = {}) {
         tasks: store.tasks.filter((t) => t.id !== action.payload),
       };
 
-  
     default:
       throw new Error("Unknown action.");
   }
