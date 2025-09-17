@@ -1,95 +1,217 @@
-import os
-from flask import Flask, request, jsonify, url_for, Blueprint
-from flask_migrate import Migrate
-from flask_swagger import swagger
-from flask_cors import CORS
-from utils import APIException, generate_sitemap
-from admin import setup_admin
-from models import db, User, Event, Task, Group
+# src/api/routesTasks.py
+"""
+Rutas de TAREAS (to-do) integradas al mismo Blueprint `api`.
+Contrato esperado por el front:
+  GET    /api/tasks?start=&end=
+  POST   /api/tasks
+  GET    /api/tasks/<id>
+  PUT    /api/tasks/<id>
+  DELETE /api/tasks/<id>
 
+Body de creación/actualización:
+{
+  "title": "Texto",
+  "date": "YYYY-MM-DD" o "YYYY-MM-DDTHH:MM",
+  "task_group_id": 1,
+  "status": true/false,
+  "color": "#RRGGBB" (opcional)
+}
+"""
+from flask import request, jsonify
+from datetime import datetime, date, time
+from typing import Optional
+from sqlalchemy.exc import IntegrityError
 
-app = Flask(__name__)
-apiEvent = Blueprint('apiEvent', __name__)
+from .models import db, Task, TaskGroup
+from .routes import api, token_required
+from .utils import APIException
 
-# Handle/serialize errors like a JSON object
+# --------- Helpers (mismos criterios que routesEvent) ---------
 
+def _normalize_iso(s: str) -> str:
+    if not s:
+        return s
+    s = s.strip().replace(" ", "T")
+    if "T" not in s:
+        s = f"{s}T00:00"
+    if s.endswith("Z"):
+        s = s[:-1] + "+00:00"
+    return s
 
-@app.errorhandler(APIException)
-def handle_invalid_usage(error):
-    return jsonify(error.to_dict()), error.status_code
+def _parse_iso_datetime(value: str) -> datetime:
+    value = _normalize_iso(value or "")
+    if not value:
+        raise ValueError("Fecha/hora vacía")
+    try:
+        return datetime.fromisoformat(value)
+    except Exception as e:
+        raise ValueError(f"Formato datetime inválido: {value}") from e
 
-# generate sitemap with all your endpoints
+def _require_int(value, name: str) -> int:
+    if value in (None, "", []):
+        raise APIException(f"Debes enviar {name}", 400)
+    try:
+        return int(value)
+    except Exception:
+        raise APIException(f"{name} debe ser numérico", 400)
 
+def _validate_taskgroup_ownership(task_group_id: int, user_id: int) -> TaskGroup:
+    tg = TaskGroup.query.filter_by(id=task_group_id, user_id=user_id).first()
+    if not tg:
+        raise APIException("El grupo no existe o no pertenece al usuario", 404)
+    return tg
 
-@app.route('/')
-def sitemap():
-    return generate_sitemap(app)
+# --------- Rutas ---------
 
+@api.route("/tasks", methods=["OPTIONS"])
+@api.route("/tasks/<int:task_id>", methods=["OPTIONS"])
+def tasks_options(task_id=None):
+    return ("", 204)
 
-# AQUI EMPIEZAN MIS RUTAS! --->
+@api.route("/tasks", methods=["GET"])
+@token_required
+def list_tasks(auth_payload):
+    """
+    Lista tareas del usuario autenticado.
+    Filtra opcionalmente por ?start=&end= usando Task.date (inclusive start, inclusive end).
+    """
+    user_id = auth_payload.get("user_id")
+    q = Task.query.filter_by(user_id=user_id)
 
-# Endpoints
+    start_qs = request.args.get("start")
+    end_qs = request.args.get("end")
 
-#  Obtener todas las tareas de un usuario
+    try:
+        if start_qs:
+            start_dt = _parse_iso_datetime(start_qs)
+            q = q.filter(Task.date >= start_dt)
+        if end_qs:
+            end_dt = _parse_iso_datetime(end_qs)
+            q = q.filter(Task.date <= end_dt)
+    except ValueError as e:
+        raise APIException(str(e), 400)
 
-@app.route("/api/users/<int:user_id>/tasks", methods=["GET"])
-def get_user_tasks(user_id):
-    tasks = Task.query.filter_by(user_id=user_id).all()
-    return jsonify([task.serialize() for task in tasks]), 200
+    tasks = q.order_by(Task.date.asc()).all()
+    return jsonify([t.serialize() for t in tasks]), 200
 
+@api.route("/tasks", methods=["POST"])
+@token_required
+def create_task(auth_payload):
+    """
+    Crea una tarea del usuario.
+    Requiere: title, date, task_group_id
+    """
+    user_id = auth_payload.get("user_id")
+    data = request.get_json() or {}
 
-# Crear nueva tarea para un usuario
+    title = (data.get("title") or "").strip()
+    if not title:
+        raise APIException("El título es requerido", 400)
 
-@app.route("/api/users/<int:user_id>/tasks", methods=["POST"])
-def create_task(user_id):
-    data = request.get_json()
+    raw_date = data.get("date")
+    if not raw_date:
+        raise APIException("Debes enviar 'date' (YYYY-MM-DD o YYYY-MM-DDTHH:MM)", 400)
+    try:
+        when = _parse_iso_datetime(raw_date)
+    except ValueError as e:
+        raise APIException(str(e), 400)
 
-    if "title" not in data:
-        return jsonify({"error": "Falta el campo 'title'"}), 400
+    tg_id = _require_int(data.get("task_group_id"), "task_group_id")
+    _validate_taskgroup_ownership(tg_id, user_id)
 
-    new_task = Task(
+    t = Task(
         user_id=user_id,
-        title=data["title"],
-        status=data.get("status", "pending"),
-        date=data.get("date"),
-        recurrencia=data.get("recurrencia"),
-        color=data.get("color")
+        task_group_id=tg_id,
+        title=title,
+        status=bool(data.get("status", False)),
+        date=when,
+        recurrencia=int(data.get("recurrencia", 0) or 0),
+        color=(data.get("color") or "").strip()
     )
+    db.session.add(t)
+    try:
+        db.session.commit()
+    except IntegrityError as ie:
+        db.session.rollback()
+        raise APIException(f"Integridad BD: {str(ie.orig)}", 400)
+    except Exception:
+        db.session.rollback()
+        import traceback; print("ERROR create_task:", traceback.format_exc())
+        raise APIException("No se pudo crear la tarea", 500)
 
-    db.session.add(new_task)
-    db.session.commit()
+    return jsonify(t.serialize()), 201
 
-    return jsonify(new_task.serialize()), 201
+@api.route("/tasks/<int:task_id>", methods=["GET"])
+@token_required
+def get_task(auth_payload, task_id: int):
+    user_id = auth_payload.get("user_id")
+    t = Task.query.filter_by(id=task_id, user_id=user_id).first()
+    if not t:
+        raise APIException("Tarea no encontrada", 404)
+    return jsonify(t.serialize()), 200
 
-# Eliminar una tarea de un usuario
+@api.route("/tasks/<int:task_id>", methods=["PUT", "PATCH"])
+@token_required
+def update_task(auth_payload, task_id: int):
+    user_id = auth_payload.get("user_id")
+    data = request.get_json() or {}
 
+    t = Task.query.filter_by(id=task_id, user_id=user_id).first()
+    if not t:
+        raise APIException("Tarea no encontrada", 404)
 
-@app.route("/api/users/<int:user_id>/tasks/<int:task_id>", methods=["DELETE"])
-def delete_task(user_id, task_id):
-    task = Task.query.filter_by(id=task_id, user_id=user_id).first()
-    if not task:
-        return jsonify({"error": "Tarea no encontrada"}), 404
+    if "title" in data:
+        title = (data.get("title") or "").strip()
+        if not title:
+            raise APIException("El título no puede estar vacío", 400)
+        t.title = title
 
-    db.session.delete(task)
-    db.session.commit()
-    return jsonify({"msg": "Tarea eliminada correctamente"}), 200
+    if "date" in data:
+        try:
+            t.date = _parse_iso_datetime(data.get("date") or "")
+        except ValueError as e:
+            raise APIException(str(e), 400)
 
-# Actualizar una tarea de un usuario
+    if "status" in data:
+        t.status = bool(data.get("status"))
 
+    if "color" in data:
+        t.color = (data.get("color") or "").strip()
 
-@app.route("/api/users/<int:user_id>/tasks/<int:task_id>", methods=["PUT"])
-def update_task(user_id, task_id):
-    task = Task.query.filter_by(id=task_id, user_id=user_id).first()
-    if not task:
-        return jsonify({"error": "Tarea no encontrada"}), 404
+    if "task_group_id" in data:
+        tg_id = _require_int(data.get("task_group_id"), "task_group_id")
+        _validate_taskgroup_ownership(tg_id, user_id)
+        t.task_group_id = tg_id
 
-    data = request.get_json()
+    try:
+        db.session.commit()
+    except IntegrityError as ie:
+        db.session.rollback()
+        raise APIException(f"Integridad BD: {str(ie.orig)}", 400)
+    except Exception:
+        db.session.rollback()
+        import traceback; print("ERROR update_task:", traceback.format_exc())
+        raise APIException("No se pudo actualizar la tarea", 500)
 
-    task.title = data.get("title", task.title)
-    task.status = data.get("status", task.status)
-    task.date = data.get("date", task.date)
-    task.recurrencia = data.get("recurrencia", task.recurrencia)
-    task.color = data.get("color", task.color)
+    return jsonify(t.serialize()), 200
 
-    db.session.commit()
-    return jsonify(task.serialize()), 200
+@api.route("/tasks/<int:task_id>", methods=["DELETE"])
+@token_required
+def delete_task(auth_payload, task_id: int):
+    user_id = auth_payload.get("user_id")
+    t = Task.query.filter_by(id=task_id, user_id=user_id).first()
+    if not t:
+        raise APIException("Tarea no encontrada", 404)
+
+    db.session.delete(t)
+    try:
+        db.session.commit()
+    except IntegrityError as ie:
+        db.session.rollback()
+        raise APIException(f"Integridad BD: {str(ie.orig)}", 400)
+    except Exception:
+        db.session.rollback()
+        import traceback; print("ERROR delete_task:", traceback.format_exc())
+        raise APIException("No se pudo eliminar la tarea", 500)
+
+    return jsonify({"message": "Tarea eliminada"}), 200

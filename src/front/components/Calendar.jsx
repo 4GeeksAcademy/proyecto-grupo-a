@@ -19,6 +19,9 @@ const Calendar = () => {
   const [popover, setPopover] = useState(null);
   const [title, setTitle] = useState('');
 
+  // 👉 Opcional: si true, también mandamos el rango visible (start/end) en hora local
+  const useLocalRangeFilters = true;
+
   const defaultCalendarId = store.calendar[0]?.id?.toString() || null;
 
   // --- Utilidades ---
@@ -92,7 +95,10 @@ const Calendar = () => {
 
   // --- helpers fecha/hora ---
   const pad2 = (n) => String(n).padStart(2, '0');
-  const toLocalISOMin = (d) => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  const toLocalISOMin = (d) => {
+    const dt = (d instanceof Date) ? d : new Date(d);
+    return `${dt.getFullYear()}-${pad2(dt.getMonth()+1)}-${pad2(dt.getDate())}T${pad2(dt.getHours())}:${pad2(dt.getMinutes())}`;
+  };
   const parseLocal = (s) => new Date((s && s.length > 10) ? s : `${s}T00:00`);
   const addMinutes = (s, mins) => { const d = parseLocal(s); d.setMinutes(d.getMinutes()+mins); return toLocalISOMin(d); };
   const addDays = (s, days) => { const d = parseLocal(s); d.setDate(d.getDate()+days); return toLocalISOMin(d).slice(0,16); };
@@ -120,8 +126,9 @@ const Calendar = () => {
     const view = api.view;
     if (!view?.currentStart || !view?.currentEnd) return;
 
-    const startISO = view.currentStart.toISOString();
-    const endISO   = view.currentEnd.toISOString();
+    // (Opcional) rango en local para ser consistente con lo que el back espera
+    const startISO = useLocalRangeFilters ? toLocalISOMin(view.currentStart) : view.currentStart.toISOString();
+    const endISO   = useLocalRangeFilters ? toLocalISOMin(view.currentEnd)   : view.currentEnd.toISOString();
 
     try {
       const [eventsRaw, tasksRaw] = await Promise.all([
@@ -248,15 +255,16 @@ const Calendar = () => {
     const type = info.event.extendedProps.type;
 
     if (type === 'event') {
-      const startISO = start.toISOString().slice(0,16);
-      const endISO   = (end || start).toISOString().slice(0,16);
+      // ✅ usar ISO local (no UTC) para evitar desfases
+      const startISO = toLocalISOMin(start);
+      const endISO   = toLocalISOMin(end || start);
       const updated  = await apiUpdateEvent(id, { start_date: startISO, end_date: endISO });
       dispatch({ type: "UPDATE_EVENT", payload: mapEventFromApi(updated) });
 
       info.event.setStart(updated.start_date);
       info.event.setEnd(updated.end_date);
     } else {
-      const startISO = start.toISOString().slice(0,16);
+      const startISO = toLocalISOMin(start);
       const updated  = await apiUpdateTask(id, { date: startISO, status: info.event.extendedProps.done || false });
       dispatch({ type: "UPDATE_TASK", payload: mapTaskFromApi(updated) });
 
